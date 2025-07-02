@@ -99,30 +99,59 @@
         const loader = document.getElementById('loader');
         const dashboardContent = document.getElementById('dashboard-content');
 
-        // Función para procesar texto CSV a un objeto JSON estructurado
+        /**
+         * Parsea texto en formato CSV a un array de objetos.
+         * Esta función es robusta y maneja correctamente las comas dentro de campos citados.
+         * @param {string} csvText - El texto CSV a parsear.
+         * @returns {Array<Object>} Un array de objetos, donde cada objeto representa una fila.
+         */
         function parseCSV(csvText) {
             const lines = csvText.trim().split('\n');
             const headers = lines[0].split(',').map(h => h.trim());
-            const data = {};
+            const dataRows = [];
 
             for (let i = 1; i < lines.length; i++) {
-                const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
-                const entry = {};
-                headers.forEach((header, index) => {
-                    entry[header] = values[index];
-                });
+                const line = lines[i];
+                // Regex para separar por comas, pero ignorar las que están dentro de comillas dobles
+                const values = line.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g) || [];
+                
+                if (values.length === headers.length) {
+                    const entry = {};
+                    headers.forEach((header, index) => {
+                        let value = values[index] ? values[index].trim() : '';
+                        // Quita las comillas dobles al principio y al final si existen
+                        if (value.startsWith('"') && value.endsWith('"')) {
+                            value = value.substring(1, value.length - 1);
+                        }
+                        entry[header] = value;
+                    });
+                    dataRows.push(entry);
+                } else {
+                    console.warn(`Fila ${i+1} ignorada: número de columnas no coincide con el encabezado.`);
+                }
+            }
+            return dataRows;
+        }
 
+        /**
+         * Agrupa los datos de los indicadores por su Objetivo Estratégico.
+         * @param {Array<Object>} flatData - El array de indicadores.
+         * @returns {Object} Un objeto con los indicadores agrupados.
+         */
+        function groupDataByObjective(flatData) {
+            const groupedData = {};
+            flatData.forEach(entry => {
                 const objectiveKey = entry.ObjetivoEstrategico;
-                if (!objectiveKey) continue;
+                if (!objectiveKey) return;
 
-                if (!data[objectiveKey]) {
-                    data[objectiveKey] = {
+                if (!groupedData[objectiveKey]) {
+                    groupedData[objectiveKey] = {
                         objective: entry.DescripcionObjetivoEstrategico,
                         color: objectiveColors[objectiveKey] || 'gray',
                         indicators: []
                     };
                 }
-                data[objectiveKey].indicators.push({
+                groupedData[objectiveKey].indicators.push({
                     id: entry.ID,
                     name: entry.NombreIndicador,
                     desc: entry.DescripcionGeneral,
@@ -131,17 +160,15 @@
                     objective: entry.ObjetivoIndicador,
                     formula: entry.Formula,
                     goal: entry.Meta,
-                    currentValue: entry.ValorActual, // Nueva columna
+                    currentValue: entry.ValorActual,
                     responsible: entry.Responsable
                 });
-            }
-            return data;
+            });
+            return groupedData;
         }
         
-        // Función para limpiar y convertir valores a números
         function parseValue(valueStr) {
             if (typeof valueStr !== 'string' || !valueStr) return 0;
-            // Reemplaza la coma decimal por un punto y elimina todo lo que no sea número o punto
             return parseFloat(valueStr.replace(/,/g, '.').replace(/[^\d.-]/g, '')) || 0;
         }
 
@@ -199,7 +226,6 @@
                                     </div>
                                 </div>
 
-                                <!-- Barra de Progreso -->
                                 <div class="mt-4">
                                     <div class="flex justify-between mb-1">
                                         <span class="text-sm font-medium text-gray-700">Cumplimiento</span>
@@ -264,10 +290,11 @@
                 if (csvText.trim().split('\n').length < 2) {
                      throw new Error("El archivo CSV está vacío o no tiene datos.");
                 }
-                const data = parseCSV(csvText);
+                const flatData = parseCSV(csvText);
+                const groupedData = groupDataByObjective(flatData);
                 
-                createTabs(data);
-                createContent(data);
+                createTabs(groupedData);
+                createContent(groupedData);
 
                 loader.classList.add('hidden');
                 dashboardContent.classList.remove('hidden');
