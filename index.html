@@ -38,6 +38,12 @@
         .details-button:hover {
             background-color: #e0e7ff; /* indigo-100 */
         }
+        #loader {
+            height: 60vh;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+        }
     </style>
 </head>
 <body class="text-gray-800">
@@ -45,85 +51,105 @@
     <div class="container mx-auto p-4 sm:p-6 lg:p-8">
         <header class="text-center mb-8">
             <h1 class="text-4xl md:text-5xl font-extrabold text-gray-900">Dashboard de Indicadores CECP 2025</h1>
-            <p class="text-lg text-gray-600 mt-2">Análisis por Objetivos Estratégicos</p>
+            <p class="text-lg text-gray-600 mt-2">Análisis por Objetivos Estratégicos con Seguimiento en Vivo</p>
         </header>
 
-        <!-- Contenedor de Pestañas -->
-        <div class="mb-8">
-            <div id="tabs-container" class="flex flex-wrap items-center justify-center gap-2 border-b border-gray-200">
-                <!-- Las pestañas se generarán aquí -->
-            </div>
+        <!-- Loader Principal -->
+        <div id="loader" class="flex flex-col items-center justify-center">
+             <svg class="animate-spin h-12 w-12 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p class="mt-4 text-gray-600">Cargando datos de los indicadores...</p>
         </div>
+        
+        <!-- Contenido del Dashboard (inicialmente oculto) -->
+        <div id="dashboard-content" class="hidden">
+            <!-- Contenedor de Pestañas -->
+            <div class="mb-8">
+                <div id="tabs-container" class="flex flex-wrap items-center justify-center gap-2 border-b border-gray-200">
+                    <!-- Las pestañas se generarán aquí -->
+                </div>
+            </div>
 
-        <!-- Contenedor de Contenido de Pestañas -->
-        <div id="tab-content-container">
-            <!-- El contenido de las pestañas se generará aquí -->
+            <!-- Contenedor de Contenido de Pestañas -->
+            <div id="tab-content-container">
+                <!-- El contenido de las pestañas se generará aquí -->
+            </div>
         </div>
     </div>
 
     <script>
-        const data = {
-            "Gestión Eficiente": {
-                objective: "Desarrollar una gestión eficiente de los procesos, el conocimiento y la información del CECP para el cumplimiento de los fines misionales de la Universidad y su normativa interna.",
-                color: "indigo",
-                indicators: [
-                    { id: 1, name: "Normativa y procedimientos del CECP ajustados y aplicados", desc: "Avance en el ajuste y aplicación de la normativa y procedimientos clave del CECP...", source: "Documentos de propuesta, Informe de autodiagnóstico, Repositorio de Procesos", periodicity: "Anual", objective: "Verificar el ajuste y aplicación de la normativa y procedimientos del CECP...", formula: "(Normas y Proc. ajustados / Normas y Proc. totales) x 100", goal: "80%", responsible: "Gestor Educación Continua" },
-                    { id: 2, name: "Equipo formado y capacitado", desc: "Cobertura de integrantes del Equipo formados y capacitados en la normativa y procedimientos del CECP", source: "Cronograma, Actas, listados de asistencia", periodicity: "Anual", objective: "Garantizar la apropiación de la normativa y procedimientos por parte del equipo", formula: "(Asistentes únicos / Total integrantes equipo) x 100", goal: "75%", responsible: "Gestor Educación Continua - Equipo CECP" },
-                    { id: 3, name: "Sistema de Gestión Educativa (SGE) creado", desc: "Ejecución del proyecto de plataforma educativa interna", source: "Plan de trabajo, Informes bimensuales, SGE operativo", periodicity: "Trimestral", objective: "Lograr la puesta en funcionamiento del SGE", formula: "(Módulos implementados / Módulos planificados) x 100", goal: "100%", responsible: "Gestor de Plataformas - Equipo CECP" },
-                    { id: 4, name: "Aplicación del Modelo de Gestión del Conocimiento", desc: "Mide el grado de ejecución del Modelo de Gestión del Conocimiento mediante productos previstos", source: "Informe de evaluación, Instrumento mapeo, Propuesta Plan de Mejoramiento", periodicity: "Semestral", objective: "Implementar el Modelo de Gestión del Conocimiento y disponer de sus herramientas", formula: "(Productos entregados / Productos planificados) x 100", goal: "90%", responsible: "Gestor Educación Continua, Gestor de Plataformas - Equipo CECP" },
-                    { id: 5, name: "Impacto social - Bienestar del equipo del CECP", desc: "Percepción del equipo sobre la utilidad de las mejoras implementadas", source: "Encuesta interna de Impacto social", periodicity: "Anual", objective: "Medir el bienestar derivado de la mejora de la normativa, procedimientos, etc.", formula: "Promedio de respuestas (1-5)", goal: "4,0", responsible: "Gestor Educación Continua - Equipo CECP" }
-                ]
-            },
-            "Oferta Pertinente": {
-                objective: "Fortalecer la gestión de oportunidades y el diseño de una oferta pertinente, sostenible y de alta calidad académica, a partir de la identificación de capacidades, fortalezas y acumulados de la comunidad académica y la delimitación de las tendencias del mercado, los retos del territorio y las necesidades de los sectores.",
-                color: "emerald",
-                indicators: [
-                    { id: 6, name: "Oportunidades validadas", desc: "Mide cuántos hallazgos de mercado se incorporan al portafolio", source: "Registro de hallazgos, Matriz de necesidades, Estudios de mercado", periodicity: "Mensual", objective: "Asegurar la calidad de la prospección: ideas relevantes y aprovechables", formula: "(Oportunidades útiles / Hallazgos de mercado) x 100", goal: "60%", responsible: "Gestores Oportunidades, Contenidos Comerciales y Gestora de Idiomas" },
-                    { id: 7, name: "Conversión a programas o proyectos ejecutados", desc: "Oportunidades útiles que se vuelven programas o proyectos ejecutados", source: "Banco de programas, Plataforma Hermes", periodicity: "Mensual", objective: "Incrementar la efectividad del diseño curricular y gestión de oportunidades", formula: "(Programas y proyectos ejecutados / Oportunidades Útiles) x 100", goal: "50% abierta / 10% cerrada", responsible: "Gestores Oportunidades, Contenidos Comerciales y Gestora de Idiomas" },
-                    { id: 10, name: "Sostenibilidad financiera", desc: "Programas y proyectos que alcanzan punto de equilibrio.", source: "Matriz de seguimiento presupuestal, Hermes, Quipú", periodicity: "Anual", objective: "Garantizar la viabilidad económica de los programas y proyectos", formula: "(Programas con utilidad ≥20% / Programas ejecutados) x 100", goal: "70%", responsible: "Gestores Oportunidades, Contenidos Comerciales, Gestora de Idiomas y Gestora Administrativa" },
-                    { id: 11, name: "Impacto social – Mejora empleabilidad", desc: "Participantes que afirman haber mejorado sus oportunidades de empleo", source: "Encuesta de salida de estudiantes", periodicity: "Anual", objective: "Medir percepción del efecto de la oferta sobre empleabilidad", formula: "(Respuestas afirmativas / Total de respuestas) x 100", goal: "4,0", responsible: "Gestores Oportunidades, Contenidos Comerciales, Gestora de Idiomas y Gestora de Mercadeo y Tendencias" }
-                ]
-            },
-            "Articulación Institucional": {
-                objective: "Promover la articulación institucional para el fortalecimiento de la educación continua y permanente, a través de la dinamización de escenarios de encuentro para la formulación y ejecución de programas co-creados.",
-                color: "rose",
-                indicators: [
-                    { id: 8, name: "Nuevas alianzas estratégicas establecidas", desc: "Mide la capacidad para establecer convenios o acuerdos de colaboración", source: "Informe trimestral, Actas, Convenios suscritos", periodicity: "Anual", objective: "Evaluar el fortalecimiento del relacionamiento institucional", formula: "Σ de alianzas nuevas establecidas", goal: "6", responsible: "Gestor Educación Continua, Gestores Oportunidades, Contenidos Comerciales y Gestora de Idiomas - Equipo CECP" },
-                    { id: 9, name: "Porcentaje de programas diseñados en articulación", desc: "Proporción de programas construidos conjuntamente con unidades académicas o aliados", source: "Fichas técnicas, actas de diseño, registros de reuniones", periodicity: "Mensual", objective: "Incentivar el trabajo colaborativo para fortalecer la pertinencia académica", formula: "(Programas diseñados con aliados / Programas ofertados) x 100", goal: "50%", responsible: "Gestores Oportunidades, Contenidos Comerciales y Gestora de Idiomas" },
-                    { id: 12, name: "Sesiones del Consejo CECP dinamizadas", desc: "Efectividad de la gobernanza interna verificando sesiones realizadas", source: "Calendario de sesiones, actas, listas de asistencia", periodicity: "Anual", objective: "Garantizar la realización y calidad de las sesiones del Consejo", formula: "(Sesiones realizadas / Sesiones programadas) × 100", goal: "≥ 85 %", responsible: "Gestor Educación Continua" },
-                    { id: 13, name: "Incidencia estratégica del CECP en la Sede", desc: "Participación activa del CECP en procesos estratégicos de la Sede", source: "Registro de participación, actas de cuerpos colegiados", periodicity: "Anual", objective: "Asegurar que el CECP contribuya a iniciativas clave de la Sede", formula: "(Procesos con aporte CECP / Procesos estratégicos Sede) × 100", goal: "≥ 20 %", responsible: "Gestor Educación Continua - Equipo CECP" }
-                ]
-            },
-            "Posicionamiento": {
-                objective: "Aumentar el posicionamiento interno y externo del CECP, a través de la comunicación integral de su quehacer y la implementación de estrategias comerciales y de mercadeo que destaquen su valor agregado.",
-                color: "sky",
-                indicators: [
-                    { id: 14, name: "Alcance digital", desc: "Usuarios únicos impactados por contenidos web y redes del CECP", source: "Google Analytics 4 / Meta-Business Suite", periodicity: "Trimestral", objective: "Aumentar la visibilidad externa del CECP vía canales digitales", formula: "Σ Usuarios impactados", goal: "28.000", responsible: "Comunicador, Diseñador, Gestora de Mercadeo y Tendencias y Apoyo de Telemercadeo" },
-                    { id: 15, name: "Conversión a matriculas", desc: "Número de leads que se convierten en matriculados", source: "Informes de métricas, CRM del SGE", periodicity: "Mensual", objective: "Medir la eficacia comercial y la tasa de conversión del CECP", formula: "(Matriculados efectivos / Leads captados) x 100", goal: "1.5%", responsible: "Gestora de Mercadeo y Tendencias y Apoyo Telemercadeo - Comunicador" },
-                    { id: 16, name: "Tasa de crecimiento de seguidores", desc: "Incremento porcentual de seguidores en plataformas digitales", source: "Informe de métricas, Plan de comunicaciones/mercadeo", periodicity: "Trimestral", objective: "Medir el impacto de las acciones comunicativas en la visibilidad digital", formula: "((Seguidores actual - previos) / previos) x 100", goal: "18%", responsible: "Comunicador, Diseñador y Gestora de Mercadeo y Tendencias" },
-                    { id: 17, name: "Cumplimiento parrilla de contenidos", desc: "Contenidos publicados vs. proyectados en la parrilla mensual", source: "Parrilla mensual, Plan de comunicaciones/mercadeo", periodicity: "Mensual", objective: "Asegurar disciplina comunicacional y cumplimiento de publicación", formula: "(Contenidos publicados / Contenidos programados) x 100", goal: "75%", responsible: "Comunicador, Diseñador y Gestora de Mercadeo y Tendencias" },
-                    { id: 18, name: "Porcentaje de estrategias de comunicación y mercadeo implementadas", desc: "Acciones desarrolladas para aumentar la visibilidad del CECP", source: "Planes de comunicación/mercadeo y cronogramas, informes", periodicity: "Semestral", objective: "Verificar la ejecución de componentes de comunicación y mercadeo", formula: "(Estrategias desarrolladas / Estrategias proyectadas) x 100", goal: "75%", responsible: "Comunicador, Diseñador, Gestora de Mercadeo y Tendencias y Apoyo de Telemercadeo" },
-                    { id: 19, name: "Eventos de posicionamiento realizados", desc: "Espacios generados para posicionar al CECP ante públicos internos y externos", source: "Agenda de eventos, Informe de seguimiento", periodicity: "Anual", objective: "Fortalecer la interacción del CECP con sus públicos objetivos", formula: "Σ eventos realizados", goal: "12", responsible: "Equipo de Comunicaciones, Mercadeo y Gestores" },
-                    { id: 20, name: "Impacto social – Percepción de valor", desc: "Valoración de los eventos CECP por los asistentes", source: "Encuesta post-evento", periodicity: "Anual", objective: "Medir percepción del aporte al desarrollo personal de los asistentes", formula: "Promedio de calificaciones de las encuestas", goal: "4,0", responsible: "Gestora de Mercadeo y Comunicador" }
-                ]
-            },
-            "Gestión Financiera": {
-                objective: "Garantizar una adecuada y eficiente gestión financiera y administrativa, orientada a la generación de recursos para el bienestar de la comunidad universitaria y la población en general.",
-                color: "amber",
-                indicators: [
-                    { id: 21, name: "Autosostenibilidad", desc: "Ingresos propios respecto a gastos operativos", source: "Informe financiero, Proyección de gastos, Plan de metas", periodicity: "Semestral", objective: "Hacer seguimiento al cubrimiento de costos de operación con ingresos", formula: "Ingresos / Costos de funcionamiento", goal: "1.0", responsible: "Gestor Educación Continua, Gestores Oportunidades, Contenidos Comerciales, Gestora de Idiomas y Gestora Administrativa" },
-                    { id: 22, name: "Liquidación de proyectos", desc: "Proyectos efectivamente liquidados", source: "Ruta de trabajo para liquidación, Seguimiento a proceso", periodicity: "Semestral", objective: "Hacer seguimiento a la liquidación oportuna de proyectos", formula: "(Proyectos liquidados / Proyectos finalizados) x 100", goal: "60%", responsible: "Gestor Educación Continua, Gestora Administrativa y Gestor de Plataformas" },
-                    { id: 23, name: "Pago a proveedores", desc: "Días promedio de pago de facturas y cuentas de cobro", source: "Sistema financiero, Matriz de seguimiento", periodicity: "Mensual", objective: "Mantener liquidez y buenas relaciones con proveedores", formula: "(Σ Días entre recepción y pago) / # de facturas", goal: "≤ 30d (fact) / ≤ 8d (cuentas)", responsible: "Gestora Administrativa" },
-                    { id: 24, name: "Recursos externos apalancados para bienestar", desc: "Relación de recursos externos sobre propios para programas de bienestar", source: "Informe financiero, Convenios", periodicity: "Semestral", objective: "Potenciar programas de bienestar con financiación externa", formula: "Recursos externos / Recursos propios", goal: "≤ 2,4", responsible: "Equipo Gestor y Administrativa" },
-                    { id: 25, name: "Impacto social – Recursos al bienestar", desc: "Excedentes del CECP destinados a programas de bienestar", source: "Informe financiero, Propuesta de bolsa de recursos", periodicity: "Anual", objective: "Hacer seguimiento a los excedentes destinados a programas de bienestar", formula: "Valor total de excedentes destinados", goal: "≤ $40.000.000", responsible: "Gestor Educación Continua y Gestora Administrativa" }
-                ]
-            }
+        // =================================================================================
+        // CONFIGURACIÓN
+        // =================================================================================
+        // 1. Publica tu Google Sheet (Archivo > Compartir > Publicar en la web).
+        // 2. Elige la hoja correcta y selecciona "Valores separados por comas (.csv)".
+        // 3. Pega el enlace generado aquí abajo.
+        // =================================================================================
+        const googleSheetUrl = 'https://docs.google.com/spreadsheets/d/1Kll7FEkH9K0bNQNLjv-il_kMaYTHj51_DDKjXrjmX4E/edit?usp=sharing';
+
+        const objectiveColors = {
+            "Gestión Eficiente": "indigo",
+            "Oferta Pertinente": "emerald",
+            "Articulación Institucional": "rose",
+            "Posicionamiento": "sky",
+            "Gestión Financiera": "amber"
         };
         
         const tabsContainer = document.getElementById('tabs-container');
         const contentContainer = document.getElementById('tab-content-container');
+        const loader = document.getElementById('loader');
+        const dashboardContent = document.getElementById('dashboard-content');
 
-        function createTabs() {
+        // Función para procesar texto CSV a un objeto JSON estructurado
+        function parseCSV(csvText) {
+            const lines = csvText.trim().split('\n');
+            const headers = lines[0].split(',').map(h => h.trim());
+            const data = {};
+
+            for (let i = 1; i < lines.length; i++) {
+                const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
+                const entry = {};
+                headers.forEach((header, index) => {
+                    entry[header] = values[index];
+                });
+
+                const objectiveKey = entry.ObjetivoEstrategico;
+                if (!objectiveKey) continue;
+
+                if (!data[objectiveKey]) {
+                    data[objectiveKey] = {
+                        objective: entry.DescripcionObjetivoEstrategico,
+                        color: objectiveColors[objectiveKey] || 'gray',
+                        indicators: []
+                    };
+                }
+                data[objectiveKey].indicators.push({
+                    id: entry.ID,
+                    name: entry.NombreIndicador,
+                    desc: entry.DescripcionGeneral,
+                    source: entry.Fuente,
+                    periodicity: entry.Periodicidad,
+                    objective: entry.ObjetivoIndicador,
+                    formula: entry.Formula,
+                    goal: entry.Meta,
+                    currentValue: entry.ValorActual, // Nueva columna
+                    responsible: entry.Responsable
+                });
+            }
+            return data;
+        }
+        
+        // Función para limpiar y convertir valores a números
+        function parseValue(valueStr) {
+            if (typeof valueStr !== 'string' || !valueStr) return 0;
+            // Reemplaza la coma decimal por un punto y elimina todo lo que no sea número o punto
+            return parseFloat(valueStr.replace(/,/g, '.').replace(/[^\d.-]/g, '')) || 0;
+        }
+
+        function createTabs(data) {
+            tabsContainer.innerHTML = '';
             Object.keys(data).forEach((objectiveKey, index) => {
                 const button = document.createElement('button');
                 button.textContent = objectiveKey;
@@ -134,7 +160,8 @@
             });
         }
 
-        function createContent() {
+        function createContent(data) {
+            contentContainer.innerHTML = '';
             Object.keys(data).forEach((objectiveKey, index) => {
                 const objectiveData = data[objectiveKey];
                 const color = objectiveData.color;
@@ -143,45 +170,75 @@
                 contentWrapper.id = `content-${objectiveKey.replace(/\s+/g, '-')}`;
                 contentWrapper.className = ` ${index !== 0 ? 'hidden' : ''}`;
 
+                let indicatorsHTML = objectiveData.indicators.map(indicator => {
+                    const metaValue = parseValue(indicator.goal);
+                    const currentValue = parseValue(indicator.currentValue);
+                    let completionPercentage = metaValue > 0 ? (currentValue / metaValue) * 100 : 0;
+                    
+                    // Para metas que son inversas (ej. "≤ 30 días"), el cálculo es diferente
+                    // Asumimos que una meta con "≤" es mejor cuanto más bajo el valor
+                    if (indicator.goal.includes('≤')) {
+                        // Si el valor actual es menor o igual a la meta, es 100%
+                        // Si es el doble de la meta, es 0%
+                        completionPercentage = metaValue > 0 ? Math.max(0, (1 - (currentValue - metaValue) / metaValue)) * 100 : 0;
+                    }
+
+                    const displayPercentage = Math.round(completionPercentage);
+                    const progressBarWidth = Math.min(100, displayPercentage);
+
+                    return `
+                        <div class="bg-white rounded-xl shadow-md border border-gray-200/80 flex flex-col transition-shadow duration-300 hover:shadow-xl">
+                            <div class="p-5 flex-grow">
+                                <div class="flex justify-between items-start">
+                                    <h3 class="text-lg font-bold text-gray-800 pr-2">${indicator.name}</h3>
+                                    <span class="text-xs font-bold text-white bg-${color}-500 rounded-full px-2.5 py-1 flex-shrink-0">${indicator.id}</span>
+                                </div>
+                                <p class="text-sm text-gray-500 mt-2 mb-4">${indicator.objective}</p>
+                                
+                                <div class="bg-gray-50 rounded-lg p-3 space-y-3">
+                                    <div class="flex items-center text-sm">
+                                        <span class="font-semibold text-gray-600 w-1/3">Meta:</span>
+                                        <span class="font-bold text-${color}-600">${indicator.goal}</span>
+                                    </div>
+                                    <div class="flex items-center text-sm">
+                                        <span class="font-semibold text-gray-600 w-1/3">Actual:</span>
+                                        <span class="text-gray-800">${indicator.currentValue || 'N/A'}</span>
+                                    </div>
+                                </div>
+
+                                <!-- Barra de Progreso -->
+                                <div class="mt-4">
+                                    <div class="flex justify-between mb-1">
+                                        <span class="text-sm font-medium text-gray-700">Cumplimiento</span>
+                                        <span class="text-sm font-medium text-${color}-700">${displayPercentage}%</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                        <div class="bg-${color}-500 h-2.5 rounded-full progress-bar" style="width: ${progressBarWidth}%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="px-5 pb-5 mt-auto">
+                                <div class="details-section mt-4 pt-4 border-t border-gray-200 text-sm space-y-2" data-indicator-id="${indicator.id}">
+                                    <p><strong class="text-gray-600">Descripción:</strong> ${indicator.desc}</p>
+                                    <p><strong class="text-gray-600">Responsable:</strong> ${indicator.responsible}</p>
+                                    <p><strong class="text-gray-600">Periodicidad:</strong> ${indicator.periodicity}</p>
+                                    <p><strong class="text-gray-600">Fuentes:</strong> ${indicator.source}</p>
+                                </div>
+                                <button onclick="toggleDetails(this, ${indicator.id})" class="details-button mt-4 w-full text-center text-sm font-semibold py-2 px-4 rounded-lg">
+                                    Ver más detalles
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
                 contentWrapper.innerHTML = `
                     <div class="bg-white p-4 rounded-lg shadow-sm mb-6 border-l-4 border-${color}-500">
                         <h2 class="text-xl font-bold text-gray-800">Objetivo Estratégico</h2>
                         <p class="mt-1 text-gray-600">${objectiveData.objective}</p>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        ${objectiveData.indicators.map(indicator => `
-                            <div class="bg-white rounded-xl shadow-md border border-gray-200/80 flex flex-col transition-shadow duration-300 hover:shadow-xl">
-                                <div class="p-5 flex-grow">
-                                    <div class="flex justify-between items-start">
-                                        <h3 class="text-lg font-bold text-gray-800 pr-2">${indicator.name}</h3>
-                                        <span class="text-xs font-bold text-white bg-${color}-500 rounded-full px-2.5 py-1 flex-shrink-0">${indicator.id}</span>
-                                    </div>
-                                    <p class="text-sm text-gray-500 mt-2 mb-4">${indicator.objective}</p>
-                                    
-                                    <div class="bg-gray-50 rounded-lg p-3 space-y-2">
-                                        <div class="flex items-center text-sm">
-                                            <span class="font-semibold text-gray-600 w-1/3">Fórmula:</span>
-                                            <span class="text-gray-800">${indicator.formula}</span>
-                                        </div>
-                                        <div class="flex items-center text-sm">
-                                            <span class="font-semibold text-gray-600 w-1/3">Meta:</span>
-                                            <span class="font-bold text-${color}-600">${indicator.goal}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="px-5 pb-5">
-                                    <div class="details-section mt-4 pt-4 border-t border-gray-200 text-sm space-y-2" data-indicator-id="${indicator.id}">
-                                        <p><strong class="text-gray-600">Descripción:</strong> ${indicator.desc}</p>
-                                        <p><strong class="text-gray-600">Responsable:</strong> ${indicator.responsible}</p>
-                                        <p><strong class="text-gray-600">Periodicidad:</strong> ${indicator.periodicity}</p>
-                                        <p><strong class="text-gray-600">Fuentes:</strong> ${indicator.source}</p>
-                                    </div>
-                                    <button onclick="toggleDetails(this, ${indicator.id})" class="details-button mt-4 w-full text-center text-sm font-semibold py-2 px-4 rounded-lg">
-                                        Ver más detalles
-                                    </button>
-                                </div>
-                            </div>
-                        `).join('')}
+                        ${indicatorsHTML}
                     </div>
                 `;
                 contentContainer.appendChild(contentWrapper);
@@ -204,10 +261,32 @@
             button.textContent = detailsSection.classList.contains('open') ? 'Ocultar detalles' : 'Ver más detalles';
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            createTabs();
-            createContent();
-        });
+        async function main() {
+            if (!googleSheetUrl || googleSheetUrl === 'https://docs.google.com/spreadsheets/d/1Kll7FEkH9K0bNQNLjv-il_kMaYTHj51_DDKjXrjmX4E/edit?usp=sharing') {
+                loader.innerHTML = '<p class="text-red-500 font-semibold text-center">Error: La URL de Google Sheets no está configurada en el archivo HTML.</p>';
+                return;
+            }
+            try {
+                const response = await fetch(googleSheetUrl);
+                if (!response.ok) {
+                    throw new Error(`Error al cargar los datos: ${response.statusText}`);
+                }
+                const csvText = await response.text();
+                const data = parseCSV(csvText);
+                
+                createTabs(data);
+                createContent(data);
+
+                loader.classList.add('hidden');
+                dashboardContent.classList.remove('hidden');
+
+            } catch (error) {
+                console.error('Error al cargar o procesar los datos:', error);
+                loader.innerHTML = `<p class="text-red-500 font-semibold text-center">No se pudieron cargar los datos. Revisa la URL y la configuración de tu Google Sheet.</p>`;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', main);
 
     </script>
 </body>
