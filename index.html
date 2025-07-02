@@ -83,11 +83,9 @@
         // =================================================================================
         // CONFIGURACIÓN
         // =================================================================================
-        // 1. Publica tu Google Sheet (Archivo > Compartir > Publicar en la web).
-        // 2. Elige la hoja correcta y selecciona "Valores separados por comas (.csv)".
-        // 3. Pega el enlace generado aquí abajo.
+        // URL de la hoja de Google Sheets publicada como CSV.
         // =================================================================================
-        const googleSheetUrl = 'https://docs.google.com/spreadsheets/d/1Kll7FEkH9K0bNQNLjv-il_kMaYTHj51_DDKjXrjmX4E/edit?usp=sharing';
+        const googleSheetUrl = 'https://docs.google.com/spreadsheets/d/1Kll7FEkH9K0bNQNLjv-il_kMaYTHj51_DDKjXrjmX4E/pub?gid=0&single=true&output=csv';
 
         const objectiveColors = {
             "Gestión Eficiente": "indigo",
@@ -262,7 +260,7 @@
         }
 
         async function main() {
-            if (!googleSheetUrl || googleSheetUrl === 'https://docs.google.com/spreadsheets/d/1Kll7FEkH9K0bNQNLjv-il_kMaYTHj51_DDKjXrjmX4E/edit?usp=sharing') {
+            if (!googleSheetUrl || googleSheetUrl === 'PEGA_AQUI_TU_URL_DE_GOOGLE_SHEETS_PUBLICADA_COMO_CSV') {
                 loader.innerHTML = '<p class="text-red-500 font-semibold text-center">Error: La URL de Google Sheets no está configurada en el archivo HTML.</p>';
                 return;
             }
