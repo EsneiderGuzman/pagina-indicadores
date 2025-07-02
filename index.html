@@ -85,7 +85,7 @@
         // =================================================================================
         // URL de la hoja de Google Sheets publicada como CSV.
         // =================================================================================
-        const googleSheetUrl = 'https://docs.google.com/spreadsheets/d/1Kll7FEkH9K0bNQNLjv-il_kMaYTHj51_DDKjXrjmX4E/pub?gid=0&single=true&output=csv';
+        const googleSheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTWUlWgnm2V7Zv3PkMZiixwwl-FXZMMd7qROZipfkjcVFLgojGoRvFwP6ECgsiAVJFOV5umTR2dBL9f/pub?output=csv';
 
         const objectiveColors = {
             "Gestión Eficiente": "indigo",
@@ -260,7 +260,7 @@
         }
 
         async function main() {
-            if (!googleSheetUrl || googleSheetUrl === 'PEGA_AQUI_TU_URL_DE_GOOGLE_SHEETS_PUBLICADA_COMO_CSV') {
+            if (!googleSheetUrl || googleSheetUrl === 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTWUlWgnm2V7Zv3PkMZiixwwl-FXZMMd7qROZipfkjcVFLgojGoRvFwP6ECgsiAVJFOV5umTR2dBL9f/pub?output=csv') {
                 loader.innerHTML = '<p class="text-red-500 font-semibold text-center">Error: La URL de Google Sheets no está configurada en el archivo HTML.</p>';
                 return;
             }
