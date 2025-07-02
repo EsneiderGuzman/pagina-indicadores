@@ -82,7 +82,6 @@
     <script>
         // =================================================================================
         // CONFIGURACIÓN
-        // =================================================================================
         // URL de la hoja de Google Sheets publicada como CSV.
         // =================================================================================
         const googleSheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTWUlWgnm2V7Zv3PkMZiixwwl-FXZMMd7qROZipfkjcVFLgojGoRvFwP6ECgsiAVJFOV5umTR2dBL9f/pub?output=csv';
@@ -173,11 +172,7 @@
                     const currentValue = parseValue(indicator.currentValue);
                     let completionPercentage = metaValue > 0 ? (currentValue / metaValue) * 100 : 0;
                     
-                    // Para metas que son inversas (ej. "≤ 30 días"), el cálculo es diferente
-                    // Asumimos que una meta con "≤" es mejor cuanto más bajo el valor
-                    if (indicator.goal.includes('≤')) {
-                        // Si el valor actual es menor o igual a la meta, es 100%
-                        // Si es el doble de la meta, es 0%
+                    if (indicator.goal && indicator.goal.includes('≤')) {
                         completionPercentage = metaValue > 0 ? Math.max(0, (1 - (currentValue - metaValue) / metaValue)) * 100 : 0;
                     }
 
@@ -260,16 +255,15 @@
         }
 
         async function main() {
-            if (!googleSheetUrl || googleSheetUrl === 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTWUlWgnm2V7Zv3PkMZiixwwl-FXZMMd7qROZipfkjcVFLgojGoRvFwP6ECgsiAVJFOV5umTR2dBL9f/pub?output=csv') {
-                loader.innerHTML = '<p class="text-red-500 font-semibold text-center">Error: La URL de Google Sheets no está configurada en el archivo HTML.</p>';
-                return;
-            }
             try {
                 const response = await fetch(googleSheetUrl);
                 if (!response.ok) {
-                    throw new Error(`Error al cargar los datos: ${response.statusText}`);
+                    throw new Error(`Error al cargar los datos: ${response.status} ${response.statusText}`);
                 }
                 const csvText = await response.text();
+                if (csvText.trim().split('\n').length < 2) {
+                     throw new Error("El archivo CSV está vacío o no tiene datos.");
+                }
                 const data = parseCSV(csvText);
                 
                 createTabs(data);
@@ -280,7 +274,7 @@
 
             } catch (error) {
                 console.error('Error al cargar o procesar los datos:', error);
-                loader.innerHTML = `<p class="text-red-500 font-semibold text-center">No se pudieron cargar los datos. Revisa la URL y la configuración de tu Google Sheet.</p>`;
+                loader.innerHTML = `<p class="text-red-500 font-semibold text-center">No se pudieron cargar los datos. <br>Revisa la URL y la configuración de tu Google Sheet. <br><small class="text-gray-500">Detalle: ${error.message}</small></p>`;
             }
         }
 
