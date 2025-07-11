@@ -101,25 +101,43 @@
 
         /**
          * Parsea texto en formato CSV a un array de objetos.
-         * Esta función es robusta y maneja correctamente las comas dentro de campos citados.
+         * Esta nueva versión es más robusta y maneja correctamente las comas dentro de campos.
          * @param {string} csvText - El texto CSV a parsear.
          * @returns {Array<Object>} Un array de objetos, donde cada objeto representa una fila.
          */
         function parseCSV(csvText) {
-            const lines = csvText.trim().split('\n');
+            const lines = csvText.trim().replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
+            if (lines.length < 2) return [];
+
             const headers = lines[0].split(',').map(h => h.trim());
             const dataRows = [];
 
             for (let i = 1; i < lines.length; i++) {
                 const line = lines[i];
-                // Regex para separar por comas, pero ignorar las que están dentro de comillas dobles
-                const values = line.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g) || [];
-                
+                if (!line.trim()) continue;
+
+                const values = [];
+                let currentField = '';
+                let inQuotes = false;
+
+                for (let j = 0; j < line.length; j++) {
+                    const char = line[j];
+
+                    if (char === '"') {
+                        inQuotes = !inQuotes;
+                    } else if (char === ',' && !inQuotes) {
+                        values.push(currentField.trim());
+                        currentField = '';
+                    } else {
+                        currentField += char;
+                    }
+                }
+                values.push(currentField.trim()); // Add the last field
+
                 if (values.length === headers.length) {
                     const entry = {};
                     headers.forEach((header, index) => {
-                        let value = values[index] ? values[index].trim() : '';
-                        // Quita las comillas dobles al principio y al final si existen
+                        let value = values[index] || '';
                         if (value.startsWith('"') && value.endsWith('"')) {
                             value = value.substring(1, value.length - 1);
                         }
@@ -127,17 +145,12 @@
                     });
                     dataRows.push(entry);
                 } else {
-                    console.warn(`Fila ${i+1} ignorada: número de columnas no coincide con el encabezado.`);
+                     console.warn(`Fila ${i + 1} ignorada: el número de columnas (${values.length}) no coincide con el encabezado (${headers.length}).`);
                 }
             }
             return dataRows;
         }
 
-        /**
-         * Agrupa los datos de los indicadores por su Objetivo Estratégico.
-         * @param {Array<Object>} flatData - El array de indicadores.
-         * @returns {Object} Un objeto con los indicadores agrupados.
-         */
         function groupDataByObjective(flatData) {
             const groupedData = {};
             flatData.forEach(entry => {
@@ -151,18 +164,28 @@
                         indicators: []
                     };
                 }
+                
+                const subGoals = [];
+                for (let i = 1; i <= 3; i++) { 
+                    if (entry[`Meta${i}_Valor`]) { 
+                        subGoals.push({
+                            label: entry[`Meta${i}_Etiqueta`] || '', 
+                            goal: entry[`Meta${i}_Valor`],
+                            current: entry[`ValorActual${i}`] || 0
+                        });
+                    }
+                }
+
                 groupedData[objectiveKey].indicators.push({
                     id: entry.ID,
                     name: entry.NombreIndicador,
                     desc: entry.DescripcionGeneral,
-                    source: entry.Fuente,
-                    periodicity: entry.Periodicidad,
                     objective: entry.ObjetivoIndicador,
                     formula: entry.Formula,
-                    goal: entry.Meta,
-                    currentValue: entry.ValorActual,
+                    periodicity: entry.Periodicidad,
                     responsible: entry.Responsable,
-                    fechaActualizacion: entry.FechaActualizacion // Nueva propiedad
+                    fechaActualizacion: entry.FechaActualizacion,
+                    subGoals: subGoals 
                 });
             });
             return groupedData;
@@ -196,16 +219,66 @@
                 contentWrapper.className = ` ${index !== 0 ? 'hidden' : ''}`;
 
                 let indicatorsHTML = objectiveData.indicators.map(indicator => {
-                    const metaValue = parseValue(indicator.goal);
-                    const currentValue = parseValue(indicator.currentValue);
-                    let completionPercentage = metaValue > 0 ? (currentValue / metaValue) * 100 : 0;
-                    
-                    if (indicator.goal && indicator.goal.includes('≤')) {
-                        completionPercentage = metaValue > 0 ? Math.max(0, (1 - (currentValue - metaValue) / metaValue)) * 100 : 0;
+                    let progressHTML = '';
+                    if (indicator.subGoals.length > 0) {
+                        if (indicator.subGoals.length === 1) {
+                             const subGoal = indicator.subGoals[0];
+                             const metaValue = parseValue(subGoal.goal);
+                             const currentValue = parseValue(subGoal.current);
+                             let completionPercentage = metaValue > 0 ? (currentValue / metaValue) * 100 : 0;
+                             if (subGoal.goal && subGoal.goal.includes('≤')) {
+                                completionPercentage = metaValue > 0 ? Math.max(0, (1 - (currentValue - metaValue) / metaValue)) * 100 : 0;
+                             }
+                             const displayPercentage = Math.round(completionPercentage);
+                             const progressBarWidth = Math.min(100, displayPercentage);
+                             progressHTML = `
+                                <div class="bg-gray-50 rounded-lg p-3 space-y-3">
+                                    <div class="flex items-center text-sm">
+                                        <span class="font-semibold text-gray-600 w-1/3">Meta:</span>
+                                        <span class="font-bold text-${color}-600">${subGoal.goal}</span>
+                                    </div>
+                                    <div class="flex items-center text-sm">
+                                        <span class="font-semibold text-gray-600 w-1/3">Actual:</span>
+                                        <span class="text-gray-800">${subGoal.current || 'N/A'}</span>
+                                    </div>
+                                </div>
+                                <div class="mt-4">
+                                    <div class="flex justify-between mb-1">
+                                        <span class="text-sm font-medium text-gray-700">${subGoal.label || 'Cumplimiento'}</span>
+                                        <span class="text-sm font-medium text-${color}-700">${displayPercentage}%</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                        <div class="bg-${color}-500 h-2.5 rounded-full progress-bar" style="width: ${progressBarWidth}%"></div>
+                                    </div>
+                                </div>
+                             `;
+                        } else { 
+                            progressHTML = '<div class="bg-gray-50 rounded-lg p-4 space-y-4">' + indicator.subGoals.map(subGoal => {
+                                const metaValue = parseValue(subGoal.goal);
+                                const currentValue = parseValue(subGoal.current);
+                                let completionPercentage = metaValue > 0 ? (currentValue / metaValue) * 100 : 0;
+                                if (subGoal.label && subGoal.label.includes('≤')) {
+                                    completionPercentage = metaValue > 0 ? Math.max(0, (1 - (currentValue - metaValue) / metaValue)) * 100 : 0;
+                                }
+                                const displayPercentage = Math.round(completionPercentage);
+                                const progressBarWidth = Math.min(100, displayPercentage);
+                                return `
+                                    <div>
+                                        <div class="flex justify-between mb-1">
+                                            <span class="text-sm font-medium text-gray-700">${subGoal.label}</span>
+                                            <span class="text-sm font-medium text-${color}-700">${displayPercentage}%</span>
+                                        </div>
+                                        <p class="text-xs text-gray-500">Meta: ${subGoal.goal} / Actual: ${subGoal.current}</p>
+                                        <div class="w-full bg-gray-200 rounded-full h-2 mt-1">
+                                            <div class="bg-${color}-500 h-2 rounded-full progress-bar" style="width: ${progressBarWidth}%"></div>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('<div class="border-t border-gray-200"></div>') + '</div>';
+                        }
+                    } else {
+                        progressHTML = '<div class="bg-gray-50 rounded-lg p-3"><p class="text-sm text-gray-500">No hay metas definidas.</p></div>';
                     }
-
-                    const displayPercentage = Math.round(completionPercentage);
-                    const progressBarWidth = Math.min(100, displayPercentage);
 
                     return `
                         <div class="bg-white rounded-xl shadow-md border border-gray-200/80 flex flex-col transition-shadow duration-300 hover:shadow-xl">
@@ -216,29 +289,8 @@
                                 </div>
                                 <p class="text-sm text-gray-500 mt-2 mb-4">${indicator.objective}</p>
                                 
-                                <div class="bg-gray-50 rounded-lg p-3 space-y-3">
-                                    <div class="flex items-center text-sm">
-                                        <span class="font-semibold text-gray-600 w-1/3">Meta:</span>
-                                        <span class="font-bold text-${color}-600">${indicator.goal}</span>
-                                    </div>
-                                    <div class="flex items-center text-sm">
-                                        <span class="font-semibold text-gray-600 w-1/3">Actual:</span>
-                                        <span class="text-gray-800">${indicator.currentValue || 'N/A'}</span>
-                                    </div>
-                                </div>
-
-                                <!-- Barra de Progreso -->
-                                <div class="mt-4">
-                                    <div class="flex justify-between mb-1">
-                                        <span class="text-sm font-medium text-gray-700">Cumplimiento</span>
-                                        <span class="text-sm font-medium text-${color}-700">${displayPercentage}%</span>
-                                    </div>
-                                    <div class="w-full bg-gray-200 rounded-full h-2.5">
-                                        <div class="bg-${color}-500 h-2.5 rounded-full progress-bar" style="width: ${progressBarWidth}%"></div>
-                                    </div>
-                                </div>
+                                ${progressHTML}
                                 
-                                <!-- Fecha de Actualización -->
                                 <div class="mt-3 text-xs text-gray-400 flex items-center justify-end">
                                     <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                     <span>Última act: ${indicator.fechaActualizacion || 'No disponible'}</span>
